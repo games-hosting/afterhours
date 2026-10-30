@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101010">
+<title>afterhours.</title>
+<style>
+:root{--bg:#101010;--panel:#191919;--text:#f4f1eb;--muted:#a5a29d;--line:#333;--accent:#d7ff64;--danger:#ff626b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.wrap{width:min(100% - 32px,980px);margin:auto}
+header{padding:30px 0 20px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.logo{font-size:clamp(30px,5vw,44px);font-weight:850;letter-spacing:-2px;margin:0}
+.logo span{color:var(--accent)}
+.tag{font-size:12px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.hero{padding:30px 0 26px}
+.eyebrow{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:2px;font-weight:800}
+h1{font-size:clamp(32px,7vw,60px);letter-spacing:-2.5px;line-height:.98;margin:12px 0}
+.hero p{color:var(--muted);max-width:560px;line-height:1.6}
+.game-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin:24px 0 38px}
+.game-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;text-align:left;color:var(--text);min-height:142px;transition:transform .15s,border-color .15s}
+.game-card:hover{transform:translateY(-2px);border-color:#777}
+.game-card .emoji{font-size:25px}.game-card h3{margin:15px 0 5px;font-size:18px}.game-card p{color:var(--muted);font-size:13px;line-height:1.45;margin:0}
+.view{display:none;padding:16px 0 50px}.view.active{display:block}
+.back{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:999px;padding:9px 14px;margin-bottom:20px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:clamp(18px,4vw,30px)}
+h2{font-size:clamp(26px,5vw,40px);letter-spacing:-1.5px;margin:4px 0 12px}
+p{line-height:1.55}
+.muted{color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.field{display:flex;flex-direction:column;gap:7px;flex:1;min-width:110px;color:var(--muted);font-size:13px}
+input,select,textarea{background:#101010;color:var(--text);border:1px solid #3b3b3b;border-radius:12px;padding:12px;width:100%;min-width:0}
+textarea{min-height:150px;resize:vertical}
+.btn{border:0;border-radius:12px;padding:12px 17px;font-weight:800;background:var(--accent);color:#111}
+.btn.secondary{background:#2a2a2a;color:var(--text);border:1px solid #414141}
+.btn.danger{background:var(--danger);color:#16090a}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.big{font-size:clamp(28px,7vw,54px);font-weight:850;letter-spacing:-1.8px;text-align:center;margin:24px 0;line-height:1.1}
+.center{text-align:center}
+.status{min-height:25px;color:var(--muted);text-align:center}
+.choice{font-size:clamp(22px,5vw,34px);font-weight:800;letter-spacing:-.7px}
+.bomb-orb{width:clamp(140px,40vw,220px);height:clamp(140px,40vw,220px);border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#393939,#171717 68%);border:1px solid #494949;margin:22px auto;font-size:68px;box-shadow:0 0 0 8px #191919}
+.bomb-orb.running{animation:pulse .8s infinite alternate}
+@keyframes pulse{from{transform:scale(1);box-shadow:0 0 0 8px #191919,0 0 10px #ff626b22}to{transform:scale(1.035);box-shadow:0 0 0 12px #251718,0 0 30px #ff626b55}}
+footer{border-top:1px solid var(--line);padding:20px 0 32px;color:var(--muted);font-size:12px}
+.hidden{display:none!important}
+@media(max-width:520px){header{padding-top:22px}.tag{font-size:10px}.panel{border-radius:16px}.game-card{min-height:125px}}
+
+/* ===== fresh look ===== */
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;background:radial-gradient(40% 40% at 20% 30%,#7c5cff30,transparent),radial-gradient(35% 35% at 80% 20%,#d7ff6424,transparent),radial-gradient(40% 40% at 60% 90%,#ff626b24,transparent);filter:blur(40px);animation:drift 18s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(4%,-3%) rotate(8deg) scale(1.1)}}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.logo span{display:inline-block;animation:blink 2s infinite}@keyframes blink{50%{opacity:.25}}
+h1{background:linear-gradient(100deg,#fff 20%,var(--accent) 60%,#fff);background-size:200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 6s linear infinite}
+@keyframes shine{to{background-position:-200%}}
+.hero{animation:rise .6s backwards}
+.game-card{position:relative;animation:rise .5s backwards;animation-delay:calc(var(--i,0)*45ms);transition:transform .2s,border-color .2s,box-shadow .2s;background:linear-gradient(160deg,#1e1e1e,#161616)}
+.game-card:hover{transform:translateY(-4px) rotate(-.4deg);border-color:var(--accent);box-shadow:0 12px 30px #d7ff6418}
+.game-card:active{transform:scale(.97)}
+.game-card:hover .emoji{display:inline-block;animation:wig .5s}
+@keyframes wig{25%{transform:rotate(-14deg) scale(1.2)}60%{transform:rotate(10deg) scale(1.2)}}
+.game-card.new::after{content:"NEW";position:absolute;top:14px;right:14px;font-size:10px;font-weight:800;letter-spacing:1px;background:var(--accent);color:#111;border-radius:99px;padding:3px 8px}
+.view.active{animation:rise .4s backwards}
+.panel{background:linear-gradient(180deg,#1d1d1d,#161616);box-shadow:0 20px 60px #0008}
+.btn{transition:transform .15s,box-shadow .15s}
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px #d7ff6430}
+.btn.secondary:hover:not(:disabled){box-shadow:none;border-color:#777}
+.btn:active:not(:disabled){transform:scale(.96)}
+.back{transition:border-color .15s,transform .15s}.back:hover{border-color:var(--accent);transform:translateX(-3px)}
+input:focus,textarea:focus,select:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px #d7ff6422}
+.big{animation:pop .4s backwards}
+/* ===== debate club ===== */
+#debate .panel>div:not(.hidden){animation:rise .4s backwards}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0;min-height:36px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#242424;border:1px solid #3d3d3d;border-radius:99px;padding:7px 8px 7px 14px;font-weight:700;animation:pop .25s}
+.chip button{background:#333;color:var(--muted);border:0;border-radius:50%;width:22px;height:22px;line-height:1;padding:0}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:26px 0 18px}
+.vs-name{font-size:clamp(20px,6vw,38px);font-weight:850;letter-spacing:-1px;padding:18px 8px;border-radius:16px;background:#101010;border:1px solid #333;word-break:break-word;transition:filter .1s}
+.vs-name.spin{filter:blur(1.5px);opacity:.7}.vs-name.lock{border-color:var(--accent);animation:pop .35s}
+.vs-x{color:var(--accent);font-weight:900;font-size:14px;letter-spacing:2px}
+.topic{font-size:clamp(20px,5vw,30px);font-weight:800;letter-spacing:-.6px;line-height:1.2;margin:14px auto;max-width:560px;min-height:1.2em}
+.topic.small{font-size:16px;color:var(--muted);font-weight:600}
+.ring{position:relative;width:min(70vw,230px);aspect-ratio:1;margin:18px auto}.ring svg{width:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:7}.rb{stroke:#2a2a2a}.rf{stroke:var(--accent);stroke-linecap:round;stroke-dasharray:339.3;stroke-dashoffset:0}
+.rt{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(48px,14vw,72px);font-weight:850;letter-spacing:-3px}
+.ring.hot .rf{stroke:var(--danger)}.ring.hot .rt{color:var(--danger);animation:pulse2 .5s infinite alternate}
+@keyframes pulse2{to{transform:scale(1.08)}}
+.vote-opts{display:grid;gap:12px;margin-top:18px}
+.vote{background:#101010;color:var(--text);border:1px solid #3b3b3b;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:4px;align-items:center;transition:.15s}
+.vote b{font-size:24px;letter-spacing:-.5px}.vote small{color:var(--accent);font-weight:800;letter-spacing:1.5px}
+.vote:hover{border-color:var(--accent);transform:translateY(-2px)}.vote:active{transform:scale(.97)}
+.trophy{font-size:72px;animation:bounce 1s infinite alternate}@keyframes bounce{to{transform:translateY(-10px) rotate(6deg)}}
+.bar{display:grid;grid-template-columns:90px 1fr 24px;align-items:center;gap:10px;margin:10px 0;text-align:left;font-weight:700}
+.bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar em{display:block;height:14px;border-radius:9px;background:#2a2a2a;overflow:hidden}
+.bar i{display:block;height:100%;width:var(--w);background:var(--accent);border-radius:9px;animation:grow 1s .3s cubic-bezier(.2,.8,.2,1) backwards}
+@keyframes grow{from{width:0}}
+.cf{position:fixed;top:-14px;width:9px;height:14px;z-index:50;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--dx),105vh) rotate(720deg)}}
+@media(prefers-reduced-motion:reduce){*,::before{animation-duration:.01s!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><p class="logo">afterhours<span>.</span></p><div class="tag">less scrolling · more chaos</div></header>
+<section id="home">
+  <div class="hero"><div class="eyebrow">the group chat, in real life</div><h1>Make tonight<br>less boring.</h1><p>Little games for your favourite people. Pick one, pass the phone, and let the chaos happen.</p></div>
+  <div class="game-grid">
+    <button class="game-card new" onclick="openGame('debate')"><div class="emoji">🎤</div><h3>Debate Club</h3><p>Two random people, one random topic, a ticking clock. Everyone else votes.</p></button>
+    <button class="game-card" onclick="openGame('bomb')"><div class="emoji">💣</div><h3>Bomb Pass</h3><p>Pass it around. Nobody knows when it goes off.</p></button>
+    <button class="game-card" onclick="openGame('spy')"><div class="emoji">🕵️</div><h3>Spyfall</h3><p>One of you is the spy. Ask questions and figure it out.</p></button>
+    <button class="game-card" onclick="openGame('undercover')"><div class="emoji">🎭</div><h3>Undercover</h3><p>Similar words, suspicious answers. Who doesn't fit?</p></button>
+    <button class="game-card" onclick="openGame('likely')"><div class="emoji">👉</div><h3>Most Likely To</h3><p>Read a prompt and point at the person who fits.</p></button>
+    <button class="game-card" onclick="openGame('wyr')"><div class="emoji">⚖️</div><h3>Would You Rather</h3><p>Two options. No easy answers.</p></button>
+    <button class="game-card" onclick="openGame('quickfire')"><div class="emoji">⚡</div><h3>Quickfire</h3><p>Answer fast. No overthinking allowed.</p></button>
+    <button class="game-card" onclick="openGame('truth')"><div class="emoji">🌓</div><h3>Truth or Tale</h3><p>Tell a story. Everyone guesses if it's real.</p></button>
+    <button class="game-card" onclick="openGame('story')"><div class="emoji">🎙️</div><h3>Story Studio</h3><p>Build a story together, by voice or text.</p></button>
+    <button class="game-card" onclick="openGame('emoji')"><div class="emoji">🧩</div><h3>Emoji Decoder</h3><p>Decode the phrase, movie, or everyday thing from emojis.</p></button>
+    <button class="game-card" onclick="openGame('category')"><div class="emoji">⏱️</div><h3>Category Clash</h3><p>Name something in the category before the clock runs out.</p></button>
+  </div>
+</section>
+<section class="view" id="bomb">
+<button class="back" onclick="goHome()">← All games</button><div class="panel center">
+<div class="eyebrow">pass it before it pops</div><h2>Bomb Pass</h2><p class="muted">The fuse is hidden. Set your time window, start the round, then pass the phone around. No visible countdown.</p>
+<div class="row" style="text-align:left;margin-top:20px">
+<label class="field">Minimum fuse (seconds)<input id="bombMin" type="number" min="5" max="600" value="15"></label>
+<label class="field">Maximum fuse (seconds)<input id="bombMax" type="number" min="6" max="600" value="60"></label>
+</div>
+<div class="bomb-orb" id="bombOrb" aria-hidden="true">💣</div>
+<div class="big" id="bombMessage">Ready?</div>
+<p class="status" id="bombStatus" aria-live="polite">Choose your fuse window, then start.</p>
+<div class="row" style="justify-content:center;margin-top:18px"><button class="btn" id="bombStart" onclick="startBomb()">Start round</button><button class="btn secondary hidden" id="bombStop" onclick="stopBomb()">Cancel round</button></div>
+<p class="muted" style="font-size:12px;margin-top:20px">Tip: set the minimum and maximum before each round. The explosion time is picked randomly between them.</p>
+</div></section>
+<section class="view" id="spy"><button class="back" onclick="goHome()">← All games</button><div class="panel"><div class="eyebrow">keep a straight face</div><h2>Spyfall-ish</h2><p class="muted">Pass the phone around. Everyone sees the location except the spy.</p><label class="field">Number of players<input id="spyPlayers" type="number" min="3" max="12" value="5"></label><div class="row" style="margin-top:14px"><button class="btn" onclick="dealSpy()">Deal roles</button><button class="btn secondary" onclick="nextSpy()">Hide / next player</button></div><div class="big" id="spyCard">Ready to deal?</div><p class="status" id="spyStatus">Keep your role secret.</p></div></section>
+<section class="view" id="undercover"><button class="back" onclick="goHome()">← All games</button><div class="panel"><div class="eyebrow">blend in</div><h2>Undercover</h2><p class="muted">Most players get the same word. One gets a similar word. Take turns giving clues, then vote.</p><label class="field">Number of players<input id="underPlayers" type="number" min="3" max="12" value="5"></label><div class="row" style="margin-top:14px"><button class="btn" onclick="dealUnder()">Deal words</button><button class="btn secondary" onclick="nextUnder()">Hide / next player</button></div><div class="big" id="underCard">Ready to deal?</div><p class="status" id="underStatus">Don't show your word to anyone.</p></div></section>
+<section class="view" id="likely"><button class="back" onclick="goHome()">← All games</button><div class="panel center"><div class="eyebrow">point fingers respectfully</div><h2>Most Likely To</h2><div class="big choice" id="likelyPrompt">Who would accidentally become famous?</div><button class="btn" onclick="nextPrompt('likely')">Next prompt ↗</button></div></section>
+<section class="view" id="wyr"><button class="back" onclick="goHome()">← All games</button><div class="panel center"><div class="eyebrow">pick your poison</div><h2>Would You Rather</h2><div class="big choice" id="wyrPrompt">Would you rather always be 10 minutes late or 20 minutes early?</div><button class="btn" onclick="nextPrompt('wyr')">Next dilemma ↗</button></div></section>
+<section class="view" id="quickfire"><button class="back" onclick="goHome()">← All games</button><div class="panel center"><div class="eyebrow">first thought only</div><h2>Quickfire</h2><p class="muted">Answer in five seconds. The group can time you.</p><div class="big choice" id="quickPrompt">Name three things you should never text your teacher.</div><button class="btn" onclick="nextPrompt('quickfire')">Next prompt ↗</button></div></section>
+<section class="view" id="truth"><button class="back" onclick="goHome()">← All games</button><div class="panel"><div class="eyebrow">real or made up?</div><h2>Truth or Tale</h2><p class="muted">One person tells a story—real or invented. Everyone else guesses.</p><div class="big choice" id="truthPrompt">Tell us about a time you got caught doing something you shouldn't.</div><div class="row"><button class="btn" onclick="nextPrompt('truth')">New prompt</button><button class="btn secondary" onclick="revealTruth()">Reveal a random choice</button></div><p class="status" id="truthReveal"></p></div></section>
+<section class="view" id="story"><button class="back" onclick="goHome()">← All games</button><div class="panel"><div class="eyebrow">make something up together</div><h2>Story Studio</h2><div class="row"><label class="field">Language<select id="storyLang" onchange="setStoryLang()"><option value="en">English</option><option value="sv">Svenska</option></select></label><label class="field">Story vibe<select id="storyVibe"><option value="mystery">Mystery</option><option value="comedy">Comedy</option><option value="fantasy">Fantasy</option><option value="thriller">Thriller</option></select></label></div><p class="muted" id="storyHint">Start with one sentence. Take turns adding to the story.</p><textarea id="storyText" placeholder="It was almost midnight when..."></textarea><div class="row" style="margin-top:12px"><button class="btn" id="micBtn" onclick="toggleMic()">🎙️ Start speaking</button><button class="btn secondary" onclick="addTwist()">Add a twist</button><button class="btn secondary" onclick="readStory()">🔊 Read aloud</button><button class="btn secondary" onclick="clearStory()">Clear</button></div><p class="status" id="storyStatus" aria-live="polite"></p></div></section>
+<section class="view" id="emoji"><button class="back" onclick="goHome()">← All games</button><div class="panel center"><div class="eyebrow">read the clues</div><h2>Emoji Decoder</h2><p class="muted">Take turns guessing what the emoji clue means. Tap reveal when the group is ready.</p><div class="big choice" id="emojiClue">🦁👑</div><p class="status" id="emojiAnswer">Guess the answer…</p><div class="row" style="justify-content:center"><button class="btn" onclick="revealEmoji()">Reveal answer</button><button class="btn secondary" onclick="nextEmoji()">Next clue ↗</button></div></div></section>
+<section class="view" id="category"><button class="back" onclick="goHome()">← All games</button><div class="panel center"><div class="eyebrow">no repeats, no stalling</div><h2>Category Clash</h2><p class="muted">Pick a category, then go around the group. Each person has to name a new answer before time runs out.</p><div class="big choice" id="categoryPrompt">Things you find in a kitchen</div><div class="big" id="categoryClock">10</div><p class="status" id="categoryStatus">Ready? Start the round and pass the phone.</p><div class="row" style="justify-content:center"><button class="btn" id="categoryStart" onclick="startCategory()">Start 10-second turn</button><button class="btn secondary" onclick="nextCategory()">New category</button></div></div></section>
+<section class="view" id="debate"><button class="back" onclick="goHome()">← All games</button><div class="panel center">
+<div class="eyebrow">settle it with words</div><h2>Debate Club</h2>
+<div id="dcSetup"><p class="muted">Add everyone playing (3+). Two get picked, a random topic gets assigned, each gets 60 seconds, then everyone else votes in secret.</p>
+<div class="row"><input id="dcName" style="flex:1" placeholder="Add a name…" maxlength="20" onkeydown="if(event.key==='Enter')dcAdd()"><button class="btn" onclick="dcAdd()">Add</button></div>
+<div class="chips" id="dcChips"></div><p class="status" id="dcMsg" aria-live="polite"></p><button class="btn" onclick="dcStart()">Pick the debaters ↗</button></div>
+<div id="dcReveal" class="hidden"><div class="vs"><div class="vs-name" id="dcA">?</div><div class="vs-x">VS</div><div class="vs-name" id="dcB">?</div></div><div class="topic" id="dcTopic"></div><div class="row" style="justify-content:center"><button class="btn hidden" id="dcGo" onclick="dcBegin()">Start the debate</button></div></div>
+<div id="dcDebate" class="hidden"><div class="eyebrow" id="dcRole"></div><div class="topic small" id="dcTopic2"></div><div class="ring" id="dcRingBox"><svg viewBox="0 0 120 120"><circle class="rb" cx="60" cy="60" r="54"/><circle class="rf" id="dcRing" cx="60" cy="60" r="54"/></svg><div class="rt" id="dcClock">60</div></div><p class="status" id="dcHint"></p><div class="row" style="justify-content:center"><button class="btn" id="dcTurnBtn" onclick="dcTurn()">Start</button><button class="btn secondary hidden" id="dcEnd" onclick="dcFinish()">End early</button></div></div>
+<div id="dcPass" class="hidden"><div class="big" id="dcPassTxt"></div><p class="muted">Votes stay hidden until everyone has voted.</p><button class="btn" id="dcPassBtn" onclick="dcBallot()">Show my ballot</button></div>
+<div id="dcVote" class="hidden"><div class="eyebrow" id="dcVoter"></div><div class="topic small" id="dcTopic3"></div><div class="vote-opts"><button class="vote" id="dcVA" onclick="dcCast('a')"></button><button class="vote" id="dcVB" onclick="dcCast('b')"></button></div></div>
+<div id="dcResult" class="hidden"><div class="trophy" id="dcTrophy">🏆</div><div class="big" id="dcWin" style="margin:8px 0 18px"></div><div id="dcBars"></div><p class="muted" id="dcTally"></p><div class="row" style="justify-content:center;margin-top:14px"><button class="btn" onclick="dcStart()">New matchup ↗</button><button class="btn secondary" onclick="dcShow('dcSetup')">Edit players</button></div></div>
+</div></section>
+<footer>afterhours. · made for nights that need a plot twist.</footer>
+</div>
+<script>
+const views=[...document.querySelectorAll('.view')];
+function openGame(id){document.getElementById('home').classList.add('hidden');views.forEach(v=>v.classList.toggle('active',v.id===id));window.scrollTo({top:0,behavior:'smooth'});}
+function goHome(){views.forEach(v=>v.classList.remove('active'));document.getElementById('home').classList.remove('hidden');stopBomb();stopMic();dcStop();window.scrollTo({top:0,behavior:'smooth'});}
+let bombTimeout=null;
+function startBomb(){
+ const minEl=document.getElementById('bombMin'),maxEl=document.getElementById('bombMax');
+ const min=Number(minEl.value),max=Number(maxEl.value);
+ if(!Number.isInteger(min)||!Number.isInteger(max)||min<5||max>600||max<=min){
+  document.getElementById('bombStatus').textContent='Use whole seconds: minimum at least 5, maximum no more than 600, and maximum must be higher.';return;
+ }
+ clearTimeout(bombTimeout);
+ const delay=(min+Math.random()*(max-min))*1000;
+ document.getElementById('bombMessage').textContent='PASS IT!';
+ document.getElementById('bombStatus').textContent='Fuse is lit. Pass the phone — no peeking.';
+ document.getElementById('bombOrb').textContent='💣';document.getElementById('bombOrb').classList.add('running');
+ document.getElementById('bombStart').classList.add('hidden');document.getElementById('bombStop').classList.remove('hidden');
+ minEl.disabled=maxEl.disabled=true;
+ bombTimeout=setTimeout(()=>{
+  playBombSound();
+  document.getElementById('bombMessage').textContent='💥 BOOM!';
+  document.getElementById('bombStatus').textContent='You got caught! Start another round when ready.';
+  document.getElementById('bombOrb').textContent='💥';document.getElementById('bombOrb').classList.remove('running');
+  document.getElementById('bombStart').textContent='Play again';document.getElementById('bombStart').classList.remove('hidden');document.getElementById('bombStop').classList.add('hidden');
+  minEl.disabled=maxEl.disabled=false;bombTimeout=null;
+ },delay);
+}
+function stopBomb(){
+ if(bombTimeout!==null)clearTimeout(bombTimeout);bombTimeout=null;
+ const msg=document.getElementById('bombMessage');if(!msg)return;
+ msg.textContent='Ready?';document.getElementById('bombStatus').textContent='Round cancelled. Change the fuse window or start again.';
+ document.getElementById('bombOrb').textContent='💣';document.getElementById('bombOrb').classList.remove('running');
+ document.getElementById('bombStart').classList.remove('hidden');document.getElementById('bombStart').textContent='Start round';document.getElementById('bombStop').classList.add('hidden');
+ document.getElementById('bombMin').disabled=document.getElementById('bombMax').disabled=false;
+}
+const locations=['A beach resort','A school','A space station','A cinema','A hospital','A wedding','A supermarket','A train','A haunted house','A music festival','A restaurant','A museum','A zoo','A pirate ship'];
+let spyRoles=[],spyIndex=0;
+function dealSpy(){let n=Math.max(3,Math.min(12,Number(document.getElementById('spyPlayers').value)||5));let spy=Math.floor(Math.random()*n);let place=locations[Math.floor(Math.random()*locations.length)];spyRoles=Array.from({length:n},(_,i)=>i===spy?'🕵️ YOU ARE THE SPY':`📍 LOCATION: ${place}`);spyIndex=0;showSpy();}
+function showSpy(){document.getElementById('spyCard').textContent=spyRoles.length?`Player ${spyIndex+1}: ${spyRoles[spyIndex]}`:'Deal roles to start';document.getElementById('spyStatus').textContent=spyRoles.length?'Remember your role, then pass the phone.':'Keep your role secret.'}
+function nextSpy(){if(!spyRoles.length)return;spyIndex=(spyIndex+1)%spyRoles.length;showSpy();}
+const wordPairs=[['Coffee','Tea'],['Beach','Pool'],['Cat','Tiger'],['Pizza','Burger'],['Moon','Sun'],['Book','Magazine'],['Train','Bus'],['Apple','Pear'],['Guitar','Piano'],['Snow','Rain'],['Castle','Palace'],['Shark','Dolphin']];
+let underRoles=[],underIndex=0;
+function dealUnder(){let n=Math.max(3,Math.min(12,Number(document.getElementById('underPlayers').value)||5)),pair=wordPairs[Math.floor(Math.random()*wordPairs.length)],under=Math.floor(Math.random()*n);underRoles=Array.from({length:n},(_,i)=>i===under?pair[1]:pair[0]);underIndex=0;showUnder();}
+function showUnder(){document.getElementById('underCard').textContent=underRoles.length?`Player ${underIndex+1}: ${underRoles[underIndex]}`:'Deal words to start';document.getElementById('underStatus').textContent=underRoles.length?'Keep your word secret. Give a subtle clue.':'Don’t show your word to anyone.'}
+function nextUnder(){if(!underRoles.length)return;underIndex=(underIndex+1)%underRoles.length;showUnder();}
+const prompts={
+ likely:['Who would accidentally become famous?','Who would survive longest in a zombie movie?','Who is most likely to reply three days later?','Who would get lost using GPS?','Who would become a millionaire first?','Who would laugh at the worst possible moment?','Who would accidentally start a rumour?','Who would befriend a stranger in five minutes?','Who would forget why they entered a room?','Who would win a reality show?'],
+ wyr:['Would you rather always be 10 minutes late or 20 minutes early?','Would you rather read minds or see the future?','Would you rather give up music or movies for a year?','Would you rather have unlimited snacks or unlimited free travel?','Would you rather only whisper or only shout for a day?','Would you rather be able to teleport or pause time?','Would you rather have your search history read aloud or your camera roll shown?','Would you rather live by the beach or in a big city?'],
+ quickfire:['Name three things you should never text your teacher.','Name three suspicious things to say at airport security.','Name three things you would bring to a deserted island.','Name three terrible names for a pet.','Name three things that instantly ruin a vibe.','Name three excuses for being late.','Name three things you should not put in a microwave.','Name three things you would never say on a first date.'],
+ truth:['Tell us about a time you got caught doing something you shouldn’t.','What is the weirdest thing you believed as a kid?','Describe your most chaotic school day.','What is a harmless lie you once told?','Tell a story about a very awkward misunderstanding.','What is the strangest dream you remember?']
+};
+const lastPrompt={};
+function nextPrompt(type){let list=prompts[type],i=Math.floor(Math.random()*list.length);if(list.length>1&&i===lastPrompt[type])i=(i+1)%list.length;lastPrompt[type]=i;let target=type==='likely'?'likelyPrompt':type==='wyr'?'wyrPrompt':type==='quickfire'?'quickPrompt':'truthPrompt';document.getElementById(target).textContent=list[i];if(type==='truth')document.getElementById('truthReveal').textContent='';}
+function revealTruth(){document.getElementById('truthReveal').textContent=Math.random()<.5?'Pick: tell a true story.':'Pick: make up a convincing tale.';}
+
+// Bomb blast sound: synthesized locally with Web Audio (no external audio file).
+let audioContext=null;
+function playBombSound(){
+ try{
+  const AudioCtx=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtx)return;
+  audioContext=audioContext||new AudioCtx();
+  if(audioContext.state==='suspended')audioContext.resume();
+  const ctx=audioContext,now=ctx.currentTime;
+  const master=ctx.createGain();master.gain.setValueAtTime(0.0001,now);master.gain.exponentialRampToValueAtTime(0.7,now+0.015);master.gain.exponentialRampToValueAtTime(0.0001,now+1.05);master.connect(ctx.destination);
+  // Low boom
+  const osc=ctx.createOscillator(),og=ctx.createGain();osc.type='sine';osc.frequency.setValueAtTime(115,now);osc.frequency.exponentialRampToValueAtTime(38,now+0.65);og.gain.setValueAtTime(0.9,now);og.gain.exponentialRampToValueAtTime(0.0001,now+0.75);osc.connect(og);og.connect(master);osc.start(now);osc.stop(now+0.8);
+  // Short filtered noise burst for the crunchy impact
+  const length=Math.floor(ctx.sampleRate*0.55),buffer=ctx.createBuffer(1,length,ctx.sampleRate),data=buffer.getChannelData(0);
+  for(let i=0;i<length;i++)data[i]=(Math.random()*2-1)*(1-i/length);
+  const noise=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),ng=ctx.createGain();noise.buffer=buffer;filter.type='lowpass';filter.frequency.setValueAtTime(1500,now);filter.frequency.exponentialRampToValueAtTime(180,now+0.5);ng.gain.setValueAtTime(0.65,now);ng.gain.exponentialRampToValueAtTime(0.0001,now+0.55);noise.connect(filter);filter.connect(ng);ng.connect(master);noise.start(now);noise.stop(now+0.56);
+ }catch(err){console.warn('Bomb sound could not play:',err);}
+}
+
+const emojiCards=[
+ ['🦁👑','The Lion King'],['🕷️👨','Spider-Man'],['❄️👸','Frozen'],['🧽⭐','SpongeBob SquarePants'],
+ ['🚌🏫','School bus'],['🌧️🎀','Rainy day'],['🍫🏭','Chocolate factory'],['🐠🔎','Finding Nemo'],
+ ['🌙🚶','Moonwalk'],['🔥🐶','Hot dog'],['📱💤','Phone on silent'],['🎈🎂','Birthday party'],
+ ['🧊☕','Iced coffee'],['👻🏠','Haunted house'],['🐼🥋','Kung Fu Panda'],['🌍🛡️','World protection']
+];
+let emojiIndex=-1;
+function nextEmoji(){
+ let next=Math.floor(Math.random()*emojiCards.length);
+ if(emojiCards.length>1&&next===emojiIndex)next=(next+1)%emojiCards.length;
+ emojiIndex=next;
+ document.getElementById('emojiClue').textContent=emojiCards[next][0];
+ document.getElementById('emojiAnswer').textContent='Guess the answer…';
+}
+function revealEmoji(){if(emojiIndex<0)nextEmoji();document.getElementById('emojiAnswer').textContent='Answer: '+emojiCards[emojiIndex][1];}
+const categories=['Things you find in a kitchen','Popular snacks','Things that are cold','Famous fictional characters','Things you pack for a trip','Animals that live in water','Things that make noise','Excuses for being late','Things at the beach','Apps on a phone','Things you wear','Foods that are round','Things in a classroom','Things you do on a weekend'];
+let categoryTimer=null,categoryIndex=-1;
+function nextCategory(){
+ if(categoryTimer){clearInterval(categoryTimer);categoryTimer=null;}
+ let next=Math.floor(Math.random()*categories.length);
+ if(categories.length>1&&next===categoryIndex)next=(next+1)%categories.length;
+ categoryIndex=next;
+ document.getElementById('categoryPrompt').textContent=categories[next];
+ document.getElementById('categoryClock').textContent='10';
+ document.getElementById('categoryStatus').textContent='Ready? Start the round and pass the phone.';
+ document.getElementById('categoryStart').disabled=false;
+}
+function startCategory(){
+ if(categoryTimer)clearInterval(categoryTimer);
+ let left=10;
+ const clock=document.getElementById('categoryClock'),status=document.getElementById('categoryStatus'),btn=document.getElementById('categoryStart');
+ btn.disabled=true;status.textContent='Go! Say an answer before time runs out.';
+ clock.textContent=left;
+ categoryTimer=setInterval(()=>{
+  left--;clock.textContent=left;
+  if(left<=0){
+   clearInterval(categoryTimer);categoryTimer=null;
+   clock.textContent='⏰';status.textContent='Time! Next player or choose a new category.';
+   btn.disabled=false;
+  }
+ },1000);
+}
+
+let recognition=null,recording=false;
+function setStoryLang(){const sv=document.getElementById('storyLang').value==='sv';document.getElementById('storyHint').textContent=sv?'Börja med en mening. Turas om att lägga till i berättelsen.':'Start with one sentence. Take turns adding to the story.';document.getElementById('storyText').placeholder=sv?'Det var nästan midnatt när...':'It was almost midnight when...';document.getElementById('micBtn').textContent=recording?(sv?'⏹ Stoppa inspelning':'⏹ Stop speaking'):(sv?'🎙️ Börja prata':'🎙️ Start speaking');}
+function toggleMic(){if(recording){stopMic();return;}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){document.getElementById('storyStatus').textContent='Speech recognition is not supported in this browser. Try Chrome, or type your story.';return;}recognition=new SR();recognition.lang=document.getElementById('storyLang').value==='sv'?'sv-SE':'en-US';recognition.continuous=true;recognition.interimResults=false;recording=true;document.getElementById('micBtn').textContent=document.getElementById('storyLang').value==='sv'?'⏹ Stoppa inspelning':'⏹ Stop speaking';document.getElementById('storyStatus').textContent='Listening… speak clearly.';recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)t+=e.results[i][0].transcript+' ';if(t){const box=document.getElementById('storyText');box.value+=(box.value.trim()?' ':'')+t.trim();}};recognition.onerror=e=>{document.getElementById('storyStatus').textContent='Mic issue: '+e.error+'. You can keep typing instead.';};recognition.onend=()=>{if(recording&&recognition){try{recognition.start();}catch(e){}}};try{recognition.start();}catch(e){recording=false;document.getElementById('storyStatus').textContent='Could not start the mic. Check browser permissions.';}}
+function stopMic(){recording=false;if(recognition){const r=recognition;recognition=null;try{r.stop();}catch(e){}}const b=document.getElementById('micBtn');if(b)b.textContent=document.getElementById('storyLang').value==='sv'?'🎙️ Börja prata':'🎙️ Start speaking';const s=document.getElementById('storyStatus');if(s)s.textContent='Stopped. Your story is saved in the box.';}
+const twists={en:['A stranger knocks with a warning.','Something in the room starts talking.','The main character finds a note with their own handwriting.','A huge secret is revealed.','The lights go out—and someone is missing.','Everything changes when the phone rings.'],sv:['En främling knackar på med en varning.','Något i rummet börjar prata.','Huvudpersonen hittar en lapp med sin egen handstil.','En stor hemlighet avslöjas.','Ljuset slocknar – och någon är borta.','Allt förändras när telefonen ringer.']};
+function addTwist(){const lang=document.getElementById('storyLang').value;const t=twists[lang][Math.floor(Math.random()*twists[lang].length)];const box=document.getElementById('storyText');box.value+=(box.value.trim()?'\n':'')+t;document.getElementById('storyStatus').textContent=lang==='sv'?'Vändning tillagd!':'Twist added!';}
+function readStory(){const text=document.getElementById('storyText').value.trim();if(!text){document.getElementById('storyStatus').textContent='Write or speak a little story first.';return;}if(!('speechSynthesis'in window)){document.getElementById('storyStatus').textContent='Read-aloud is not supported in this browser.';return;}stopMic();speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=document.getElementById('storyLang').value==='sv'?'sv-SE':'en-US';speechSynthesis.speak(u);document.getElementById('storyStatus').textContent='Reading your story aloud…';}
+function clearStory(){stopMic();document.getElementById('storyText').value='';document.getElementById('storyStatus').textContent='Fresh page. Start a new story!';}
+
+// ===== Debate Club =====
+const E=id=>document.getElementById(id);
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuf=a=>a.map(x=>[Math.random(),x]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+const dcTopics=['Pineapple belongs on pizza.','Cereal is a soup.','A hot dog is a sandwich.','Cats are better than dogs.','Mornings are better than nights.','Breakfast is the best meal of the day.','Water is wet.','Social media has made us worse friends.','Group chats are more stress than fun.','Everyone should have to wave back at drivers who let them cross.','Voice notes are a crime.','Reading the book beats watching the movie.','Sequels are never better than the original.','Summer beats winter.','Aliens definitely exist.','The best way to travel is with no plan.','Homework should be banned.','Tipping culture has gone too far.','Dark mode is better than light mode.','Texting “k” is rude.','Remote work beats the office.','Crocs are fashion.','Socks with sandals is acceptable.','Gen Z slang is ruining language.','Everyone should learn to cook before turning 18.','Leaving people on read is fine.','Ketchup belongs on everything.','Spoilers don’t ruin anything.','Zoos are good for animals.','Teleportation beats flying as a superpower.','Being early is better than being on time.','The window seat is the best seat.','Birthdays are overrated.','Cold showers are better than hot ones.','Mint chocolate is delicious, not toothpaste.','A robot should be allowed to be your best friend.','Whoever pays the bill should pick the restaurant.','Shoes should come off at the door, always.'];
+let dc={p:[],a:'',b:'',t:'',fa:'',fb:'',order:[],turn:0,voters:[],vi:0,va:0,vb:0,end:0,iv:null,sp:null,last:''};
+const dcIds=['dcSetup','dcReveal','dcDebate','dcPass','dcVote','dcResult'];
+function dcShow(id){dcIds.forEach(i=>E(i).classList.toggle('hidden',i!==id));}
+function dcDraw(){E('dcChips').innerHTML=dc.p.map((n,i)=>`<span class="chip">${esc(n)}<button onclick="dcDel(${i})" aria-label="Remove ${esc(n)}">×</button></span>`).join('');}
+function dcDel(i){dc.p.splice(i,1);dcDraw();}
+function dcAdd(){const el=E('dcName'),n=el.value.trim(),m=E('dcMsg');if(!n)return;
+ if(dc.p.some(x=>x.toLowerCase()===n.toLowerCase())){m.textContent='That name is already in.';return;}
+ if(dc.p.length>=14){m.textContent='Max 14 players.';return;}
+ dc.p.push(n);el.value='';el.focus();m.textContent='';dcDraw();}
+function dcSpin(el,list,ms,final,done){clearInterval(dc.sp);el.classList.remove('lock');el.classList.add('spin');const t0=Date.now();
+ dc.sp=setInterval(()=>{if(Date.now()-t0>=ms){clearInterval(dc.sp);el.textContent=final;el.classList.remove('spin');el.classList.add('lock');done();}else el.textContent=list[Math.floor(Math.random()*list.length)];},70);}
+function dcStart(){const m=E('dcMsg');
+ if(dc.p.length<3){dcShow('dcSetup');m.textContent='Add at least 3 players: two debaters and at least one voter.';return;}
+ const s=shuf(dc.p);dc.a=s[0];dc.b=s[1];dc.voters=shuf(s.slice(2));
+ let t;do{t=dcTopics[Math.floor(Math.random()*dcTopics.length)];}while(t===dc.last);dc.t=dc.last=t;
+ if(Math.random()<.5){dc.fa='FOR';dc.fb='AGAINST';}else{dc.fa='AGAINST';dc.fb='FOR';}
+ dc.order=shuf(['a','b']);dc.turn=0;dc.vi=0;dc.va=dc.vb=0;
+ dcShow('dcReveal');E('dcGo').classList.add('hidden');
+ ['dcA','dcB'].forEach(i=>{E(i).textContent='?';E(i).classList.remove('lock','spin');});
+ const T=E('dcTopic');T.textContent='';
+ dcSpin(E('dcA'),dc.p,1100,dc.a,()=>dcSpin(E('dcB'),dc.p,1100,dc.b,()=>dcSpin(T,dcTopics,1300,dc.t,()=>{T.classList.remove('spin','lock');E('dcGo').classList.remove('hidden');})));}
+function dcBegin(){dc.turn=0;dcShow('dcDebate');dcPrep();}
+function dcPrep(){const w=dc.order[dc.turn],name=dc[w],side=w==='a'?dc.fa:dc.fb;
+ E('dcRole').textContent=`${name} · arguing ${side}`;E('dcTopic2').textContent=dc.t;E('dcClock').textContent='60';
+ E('dcRing').style.strokeDashoffset=0;E('dcRingBox').classList.remove('hot');
+ E('dcHint').textContent=dc.turn===0?`${name} goes first. Everyone else: stay quiet and judge.`:`Time! Now it’s ${name}’s turn to fire back.`;
+ E('dcTurnBtn').textContent=`Start ${name}’s 60 seconds`;E('dcTurnBtn').classList.remove('hidden');E('dcEnd').classList.add('hidden');}
+function dcTurn(){E('dcTurnBtn').classList.add('hidden');E('dcEnd').classList.remove('hidden');E('dcHint').textContent='Make it count. No interrupting!';
+ dc.end=Date.now()+60000;clearInterval(dc.iv);
+ dc.iv=setInterval(()=>{const left=Math.max(0,(dc.end-Date.now())/1000);E('dcClock').textContent=Math.ceil(left);
+  E('dcRing').style.strokeDashoffset=339.3*(1-left/60);E('dcRingBox').classList.toggle('hot',left<=10);if(left<=0)dcFinish();},100);}
+function dcBeep(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;audioContext=audioContext||new C();const x=audioContext;if(x.state==='suspended')x.resume();const o=x.createOscillator(),g=x.createGain(),n=x.currentTime;o.frequency.value=660;g.gain.setValueAtTime(.3,n);g.gain.exponentialRampToValueAtTime(.0001,n+.5);o.connect(g);g.connect(x.destination);o.start();o.stop(n+.5);}catch(e){}}
+function dcFinish(){clearInterval(dc.iv);dcBeep();dc.turn++;
+ if(dc.turn<2){dcPrep();return;}
+ dc.vi=0;dcShow('dcPass');dcPassMsg();}
+function dcPassMsg(){const v=dc.voters[dc.vi];E('dcPassTxt').textContent=`Pass the phone to ${v}`;E('dcPassBtn').textContent=`I’m ${v}: show my ballot`;}
+function dcBallot(){const v=dc.voters[dc.vi];dcShow('dcVote');E('dcVoter').textContent=`${v}, who won?`;E('dcTopic3').textContent=dc.t;
+ E('dcVA').innerHTML=`<b>${esc(dc.a)}</b><small>${dc.fa}</small>`;E('dcVB').innerHTML=`<b>${esc(dc.b)}</b><small>${dc.fb}</small>`;}
+function dcCast(w){dc['v'+w]++;dc.vi++;if(dc.vi<dc.voters.length){dcShow('dcPass');dcPassMsg();}else dcResult();}
+function dcResult(){dcShow('dcResult');const a=dc.va,b=dc.vb,tot=a+b,tie=a===b;
+ E('dcTrophy').textContent=tie?'🤝':'🏆';E('dcWin').textContent=tie?'It’s a tie!':`${a>b?dc.a:dc.b} wins!`;
+ const row=(n,v)=>`<div class="bar"><span>${esc(n)}</span><em><i style="--w:${tot?v/tot*100:0}%"></i></em><b>${v}</b></div>`;
+ E('dcBars').innerHTML=row(dc.a,a)+row(dc.b,b);
+ E('dcTally').textContent=tie?'Dead even. Run it back with a new matchup.':`${tot} secret vote${tot===1?'':'s'} counted.`;
+ if(!tie)dcConfetti();}
+function dcConfetti(){for(let i=0;i<70;i++){const s=document.createElement('span');s.className='cf';
+ s.style.cssText=`left:${Math.random()*100}%;background:hsl(${Math.random()*360} 90% 60%);animation-delay:${Math.random()*.6}s;animation-duration:${1.8+Math.random()*1.6}s;--dx:${(Math.random()-.5)*220}px`;
+ document.body.appendChild(s);setTimeout(()=>s.remove(),4200);}}
+function dcStop(){clearInterval(dc.iv);clearInterval(dc.sp);if(E('dcSetup'))dcShow('dcSetup');}
+document.querySelectorAll('.game-card').forEach((c,i)=>c.style.setProperty('--i',i));
+</script>
+</body>
+</html>
