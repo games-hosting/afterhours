@@ -101,6 +101,21 @@ input:focus,textarea:focus,select:focus{outline:0;border-color:var(--accent);box
 .cf{position:fixed;top:-14px;width:9px;height:14px;z-index:50;pointer-events:none;animation:fall linear forwards}
 @keyframes fall{to{transform:translate(var(--dx),105vh) rotate(720deg)}}
 @media(prefers-reduced-motion:reduce){*,::before{animation-duration:.01s!important;transition:none!important}}
+
+body{overflow-x:hidden}
+.bomb-orb{position:relative}
+.bomb-orb.running::after{content:"✨";position:absolute;top:2%;right:12%;font-size:34px;animation:spark .25s infinite alternate}
+@keyframes spark{from{transform:scale(.7) rotate(-15deg);opacity:.6}to{transform:scale(1.25) rotate(15deg);opacity:1}}
+.bomb-orb.boom{background:radial-gradient(circle,#fff3b0,#ffb02e 35%,#ff4d1f 65%,#2a0e08);border-color:#ff9a4d;box-shadow:0 0 0 8px #2a1209,0 0 80px #ff7a2fcc;animation:blast .7s cubic-bezier(.2,1.4,.4,1)}
+@keyframes blast{0%{transform:scale(.7)}35%{transform:scale(1.3) rotate(-5deg)}100%{transform:scale(1)}}
+.shock{position:absolute;inset:0;border-radius:50%;border:5px solid #ffb347;pointer-events:none;animation:shock .9s ease-out both}
+@keyframes shock{from{transform:scale(1);opacity:.9}to{transform:scale(3.4);opacity:0;border-width:1px}}
+.spark{position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4px;border-radius:50%;background:hsl(var(--h) 100% 58%);box-shadow:0 0 10px hsl(var(--h) 100% 58%);pointer-events:none;animation:fly .9s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+.flash{position:fixed;inset:0;z-index:60;pointer-events:none;background:radial-gradient(circle,#fff,#ffb347 40%,transparent 75%);animation:flash .6s ease-out forwards}
+@keyframes flash{from{opacity:.85}to{opacity:0}}
+.shake{animation:shake .5s}
+@keyframes shake{10%,50%,90%{transform:translate(-7px,3px)}30%,70%{transform:translate(7px,-4px)}}
 </style>
 </head>
 <body>
@@ -146,7 +161,7 @@ input:focus,textarea:focus,select:focus{outline:0;border-color:var(--accent);box
 <section class="view" id="category"><button class="back" onclick="goHome()">← All games</button><div class="panel center"><div class="eyebrow">no repeats, no stalling</div><h2>Category Clash</h2><p class="muted">Pick a category, then go around the group. Each person has to name a new answer before time runs out.</p><div class="big choice" id="categoryPrompt">Things you find in a kitchen</div><div class="big" id="categoryClock">10</div><p class="status" id="categoryStatus">Ready? Start the round and pass the phone.</p><div class="row" style="justify-content:center"><button class="btn" id="categoryStart" onclick="startCategory()">Start 10-second turn</button><button class="btn secondary" onclick="nextCategory()">New category</button></div></div></section>
 <section class="view" id="debate"><button class="back" onclick="goHome()">← All games</button><div class="panel center">
 <div class="eyebrow">settle it with words</div><h2>Debate Club</h2>
-<div id="dcSetup"><p class="muted">Add everyone playing (3+). Two get picked, a random topic gets assigned, each gets 60 seconds, then everyone else votes in secret.</p>
+<div id="dcSetup"><p class="muted">Add everyone playing (3+). Two get picked, a random topic gets assigned, you get 2 minutes of combined, talk-over-each-other arguing, then everyone else votes in secret.</p>
 <div class="row"><input id="dcName" style="flex:1" placeholder="Add a name…" maxlength="20" onkeydown="if(event.key==='Enter')dcAdd()"><button class="btn" onclick="dcAdd()">Add</button></div>
 <div class="chips" id="dcChips"></div><p class="status" id="dcMsg" aria-live="polite"></p><button class="btn" onclick="dcStart()">Pick the debaters ↗</button></div>
 <div id="dcReveal" class="hidden"><div class="vs"><div class="vs-name" id="dcA">?</div><div class="vs-x">VS</div><div class="vs-name" id="dcB">?</div></div><div class="topic" id="dcTopic"></div><div class="row" style="justify-content:center"><button class="btn hidden" id="dcGo" onclick="dcBegin()">Start the debate</button></div></div>
@@ -172,23 +187,23 @@ function startBomb(){
  const delay=(min+Math.random()*(max-min))*1000;
  document.getElementById('bombMessage').textContent='PASS IT!';
  document.getElementById('bombStatus').textContent='Fuse is lit. Pass the phone — no peeking.';
- document.getElementById('bombOrb').textContent='💣';document.getElementById('bombOrb').classList.add('running');
+ document.getElementById('bombOrb').textContent='💣';document.getElementById('bombOrb').classList.remove('boom');document.getElementById('bombOrb').classList.add('running');startFuse();
  document.getElementById('bombStart').classList.add('hidden');document.getElementById('bombStop').classList.remove('hidden');
  minEl.disabled=maxEl.disabled=true;
  bombTimeout=setTimeout(()=>{
   playBombSound();
   document.getElementById('bombMessage').textContent='💥 BOOM!';
   document.getElementById('bombStatus').textContent='You got caught! Start another round when ready.';
-  document.getElementById('bombOrb').textContent='💥';document.getElementById('bombOrb').classList.remove('running');
+  document.getElementById('bombOrb').textContent='💥';document.getElementById('bombOrb').classList.remove('running');bombExplode();
   document.getElementById('bombStart').textContent='Play again';document.getElementById('bombStart').classList.remove('hidden');document.getElementById('bombStop').classList.add('hidden');
   minEl.disabled=maxEl.disabled=false;bombTimeout=null;
  },delay);
 }
 function stopBomb(){
- if(bombTimeout!==null)clearTimeout(bombTimeout);bombTimeout=null;
+ if(bombTimeout!==null)clearTimeout(bombTimeout);bombTimeout=null;stopFuse();
  const msg=document.getElementById('bombMessage');if(!msg)return;
  msg.textContent='Ready?';document.getElementById('bombStatus').textContent='Round cancelled. Change the fuse window or start again.';
- document.getElementById('bombOrb').textContent='💣';document.getElementById('bombOrb').classList.remove('running');
+ document.getElementById('bombOrb').textContent='💣';document.getElementById('bombOrb').classList.remove('running','boom');
  document.getElementById('bombStart').classList.remove('hidden');document.getElementById('bombStart').textContent='Start round';document.getElementById('bombStop').classList.add('hidden');
  document.getElementById('bombMin').disabled=document.getElementById('bombMax').disabled=false;
 }
@@ -209,7 +224,7 @@ const prompts={
  truth:['Tell us about a time you got caught doing something you shouldn’t.','What is the weirdest thing you believed as a kid?','Describe your most chaotic school day.','What is a harmless lie you once told?','Tell a story about a very awkward misunderstanding.','What is the strangest dream you remember?']
 };
 const lastPrompt={};
-function nextPrompt(type){let list=prompts[type],i=Math.floor(Math.random()*list.length);if(list.length>1&&i===lastPrompt[type])i=(i+1)%list.length;lastPrompt[type]=i;let target=type==='likely'?'likelyPrompt':type==='wyr'?'wyrPrompt':type==='quickfire'?'quickPrompt':'truthPrompt';document.getElementById(target).textContent=list[i];if(type==='truth')document.getElementById('truthReveal').textContent='';}
+function nextPrompt(type){let list=prompts[type];if(!bags[type]||!bags[type].length)bags[type]=shuf(list.map((_,k)=>k));let i=bags[type].pop();lastPrompt[type]=i;let target=type==='likely'?'likelyPrompt':type==='wyr'?'wyrPrompt':type==='quickfire'?'quickPrompt':'truthPrompt';document.getElementById(target).textContent=list[i];if(type==='truth')document.getElementById('truthReveal').textContent='';}
 function revealTruth(){document.getElementById('truthReveal').textContent=Math.random()<.5?'Pick: tell a true story.':'Pick: make up a convincing tale.';}
 
 // Bomb blast sound: synthesized locally with Web Audio (no external audio file).
@@ -239,8 +254,7 @@ const emojiCards=[
 ];
 let emojiIndex=-1;
 function nextEmoji(){
- let next=Math.floor(Math.random()*emojiCards.length);
- if(emojiCards.length>1&&next===emojiIndex)next=(next+1)%emojiCards.length;
+ if(!bags.emoji||!bags.emoji.length)bags.emoji=shuf(emojiCards.map((_,k)=>k));let next=bags.emoji.pop();
  emojiIndex=next;
  document.getElementById('emojiClue').textContent=emojiCards[next][0];
  document.getElementById('emojiAnswer').textContent='Guess the answer…';
@@ -309,20 +323,18 @@ function dcStart(){const m=E('dcMsg');
  ['dcA','dcB'].forEach(i=>{E(i).textContent='?';E(i).classList.remove('lock','spin');});
  const T=E('dcTopic');T.textContent='';
  dcSpin(E('dcA'),dc.p,1100,dc.a,()=>dcSpin(E('dcB'),dc.p,1100,dc.b,()=>dcSpin(T,dcTopics,1300,dc.t,()=>{T.classList.remove('spin','lock');E('dcGo').classList.remove('hidden');})));}
-function dcBegin(){dc.turn=0;dcShow('dcDebate');dcPrep();}
-function dcPrep(){const w=dc.order[dc.turn],name=dc[w],side=w==='a'?dc.fa:dc.fb;
- E('dcRole').textContent=`${name} · arguing ${side}`;E('dcTopic2').textContent=dc.t;E('dcClock').textContent='60';
+function dcBegin(){dcShow('dcDebate');dcPrep();}
+const dcFmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+function dcPrep(){E('dcRole').textContent=`${dc.a} (${dc.fa}) vs ${dc.b} (${dc.fb})`;E('dcTopic2').textContent=dc.t;E('dcClock').textContent=dcFmt(120);
  E('dcRing').style.strokeDashoffset=0;E('dcRingBox').classList.remove('hot');
- E('dcHint').textContent=dc.turn===0?`${name} goes first. Everyone else: stay quiet and judge.`:`Time! Now it’s ${name}’s turn to fire back.`;
- E('dcTurnBtn').textContent=`Start ${name}’s 60 seconds`;E('dcTurnBtn').classList.remove('hidden');E('dcEnd').classList.add('hidden');}
-function dcTurn(){E('dcTurnBtn').classList.add('hidden');E('dcEnd').classList.remove('hidden');E('dcHint').textContent='Make it count. No interrupting!';
- dc.end=Date.now()+60000;clearInterval(dc.iv);
- dc.iv=setInterval(()=>{const left=Math.max(0,(dc.end-Date.now())/1000);E('dcClock').textContent=Math.ceil(left);
-  E('dcRing').style.strokeDashoffset=339.3*(1-left/60);E('dcRingBox').classList.toggle('hot',left<=10);if(left<=0)dcFinish();},100);}
+ E('dcHint').textContent='Both of you talk at once. Interrupt, rebut, escalate. Everyone else: judge the chaos.';
+ E('dcTurnBtn').textContent='Start the 2 minutes';E('dcTurnBtn').classList.remove('hidden');E('dcEnd').classList.add('hidden');}
+function dcTurn(){E('dcTurnBtn').classList.add('hidden');E('dcEnd').classList.remove('hidden');E('dcHint').textContent='Fight! No holding back.';
+ dc.end=Date.now()+120000;clearInterval(dc.iv);
+ dc.iv=setInterval(()=>{const left=Math.max(0,(dc.end-Date.now())/1000);E('dcClock').textContent=dcFmt(Math.ceil(left));
+  E('dcRing').style.strokeDashoffset=339.3*(1-left/120);E('dcRingBox').classList.toggle('hot',left<=15);if(left<=0)dcFinish();},100);}
 function dcBeep(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;audioContext=audioContext||new C();const x=audioContext;if(x.state==='suspended')x.resume();const o=x.createOscillator(),g=x.createGain(),n=x.currentTime;o.frequency.value=660;g.gain.setValueAtTime(.3,n);g.gain.exponentialRampToValueAtTime(.0001,n+.5);o.connect(g);g.connect(x.destination);o.start();o.stop(n+.5);}catch(e){}}
-function dcFinish(){clearInterval(dc.iv);dcBeep();dc.turn++;
- if(dc.turn<2){dcPrep();return;}
- dc.vi=0;dcShow('dcPass');dcPassMsg();}
+function dcFinish(){clearInterval(dc.iv);dcBeep();dc.vi=0;dcShow('dcPass');dcPassMsg();}
 function dcPassMsg(){const v=dc.voters[dc.vi];E('dcPassTxt').textContent=`Pass the phone to ${v}`;E('dcPassBtn').textContent=`I’m ${v}: show my ballot`;}
 function dcBallot(){const v=dc.voters[dc.vi];dcShow('dcVote');E('dcVoter').textContent=`${v}, who won?`;E('dcTopic3').textContent=dc.t;
  E('dcVA').innerHTML=`<b>${esc(dc.a)}</b><small>${dc.fa}</small>`;E('dcVB').innerHTML=`<b>${esc(dc.b)}</b><small>${dc.fb}</small>`;}
@@ -338,6 +350,28 @@ function dcConfetti(){for(let i=0;i<70;i++){const s=document.createElement('span
  document.body.appendChild(s);setTimeout(()=>s.remove(),4200);}}
 function dcStop(){clearInterval(dc.iv);clearInterval(dc.sp);if(E('dcSetup'))dcShow('dcSetup');}
 document.querySelectorAll('.game-card').forEach((c,i)=>c.style.setProperty('--i',i));
+
+const bags={};
+// ===== bomb: fuse tick + explosion =====
+let fuseIv=null;
+function fuseTick(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;audioContext=audioContext||new C();const x=audioContext;if(x.state==='suspended')x.resume();const n=x.currentTime;
+ const o=x.createOscillator(),g=x.createGain();o.type='square';o.frequency.setValueAtTime(820+Math.random()*260,n);g.gain.setValueAtTime(.05,n);g.gain.exponentialRampToValueAtTime(.0001,n+.045);o.connect(g);g.connect(x.destination);o.start(n);o.stop(n+.05);
+ const len=Math.floor(x.sampleRate*.08),b=x.createBuffer(1,len,x.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len);
+ const s=x.createBufferSource(),f=x.createBiquadFilter(),ng=x.createGain();s.buffer=b;f.type='highpass';f.frequency.value=3500;ng.gain.value=.12;s.connect(f);f.connect(ng);ng.connect(x.destination);s.start(n+.02);}catch(e){}}
+function startFuse(){stopFuse();fuseTick();fuseIv=setInterval(fuseTick,650);}
+function stopFuse(){clearInterval(fuseIv);fuseIv=null;}
+function bombExplode(){stopFuse();const o=E('bombOrb');o.classList.add('boom');
+ for(let i=0;i<2;i++){const r=document.createElement('i');r.className='shock';r.style.animationDelay=i*.15+'s';o.appendChild(r);}
+ for(let i=0;i<32;i++){const a=Math.random()*6.283,d=90+Math.random()*190,s=document.createElement('i');s.className='spark';s.style.cssText=`--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px;--h:${15+Math.random()*40}`;o.appendChild(s);}
+ const f=document.createElement('div');f.className='flash';document.body.appendChild(f);
+ const p=document.querySelector('#bomb .panel');p.classList.remove('shake');void p.offsetWidth;p.classList.add('shake');
+ if(navigator.vibrate)navigator.vibrate([200,60,200]);
+ setTimeout(()=>{f.remove();p.classList.remove('shake');o.querySelectorAll('.shock,.spark').forEach(n=>n.remove());},1400);}
+
+// ===== way more content =====
+prompts.likely.push('Who would adopt 12 pets without telling anyone?','Who would cry at a commercial?','Who would get us all kicked out of a restaurant?','Who would text “on my way” while still in bed?','Who would fall asleep first at a sleepover?','Who would win an argument they’re totally wrong about?','Who would join a cult by accident?','Who would talk their way out of a speeding ticket?','Who would last longest without their phone?','Who would show up to the wrong party?','Who would accidentally text the person they’re talking about?','Who would survive longest on a deserted island?','Who would get the most lost in a mall?','Who would become a famous chef?','Who would end up on the news for something weird?','Who would forget their own birthday?','Who would start a business and sell it for millions?','Who would try an extreme sport once and never stop?','Who is secretly a millionaire?','Who would cheat at a board game and deny it?','Who would scream at a tiny spider?','Who would cry first at a wedding?','Who would marry first?','Who would hide a snack from everyone?','Who would take 400 photos of one meal?','Who would still be arguing in the group chat at 3 a.m.?','Who would go viral for a bad reason?','Who would rather cancel plans than go out?','Who would come back from a weekend away with a new accent?','Who would give the worst gift and be proud of it?','Who would win a hot-dog eating contest?','Who would pull an all-nighter and still ace it?','Who would make the best movie villain?','Who would become friends with a celebrity?','Who would get a tattoo on a whim?','Who would laugh during the most serious moment?','Who would take the last slice without asking?','Who would leave a party without saying goodbye?','Who has the most unhinged search history?','Who would throw the best party?','Who would get away with a crime?','Who would be late to their own wedding?','Who would cry while playing a video game?','Who would be the best teacher?','Who would nap in a public place?','Who would burn water?','Who would end up on a reality dating show?','Who would pick a fight with a goose?','Who would give a fake name to a barista?','Who would reply “haha” to a long sad message?','Who is the worst at keeping secrets?','Who would take the most selfies on a trip?','Who would quit their job to travel the world?','Who would still be gaming at 4 a.m.?','Who would wear sunglasses indoors with full confidence?');
+prompts.wyr.push('Would you rather have a rewind button or a pause button for your life?','Would you rather never use social media again or never watch another show or movie?','Would you rather fight one horse-sized duck or a hundred duck-sized horses?','Would you rather always have wet socks or always have a pebble in your shoe?','Would you rather be famous for something embarrassing or never be known at all?','Would you rather talk like a pirate or like a movie villain for the rest of your life?','Would you rather lose your phone for a month or lose all your photos forever?','Would you rather fly at walking speed or run at car speed?','Would you rather have no eyebrows or no eyelashes?','Would you rather eat your favourite meal every day for a year or never eat it again?','Would you rather have a personal chef or a personal driver?','Would you rather live in a treehouse or on a houseboat?','Would you rather have your texts read aloud by a robot or sent to the wrong person once a week?','Would you rather have to sing everything you say or dance whenever you hear music?','Would you rather be stuck in an elevator with a stranger who never stops talking or in total silence for two hours?','Would you rather have a pet dragon the size of a cat or a cat the size of a dragon?','Would you rather never have to sleep or never have to eat?','Would you rather wear a tuxedo or a onesie to every event?','Would you rather get a free flight anywhere every year or a free dinner out every week?','Would you rather be the funniest person in the room or the smartest?','Would you rather have your thoughts appear as subtitles above your head or have a laugh track follow you everywhere?','Would you rather swap lives with a celebrity for a day or with your pet?','Would you rather eat a whole lemon or a whole raw onion?','Would you rather only communicate in memes or only in song lyrics?','Would you rather always walk backwards or always hop?','Would you rather lose all your snacks forever or have all your secrets leaked?','Would you rather have a boring job you love leaving or a dream job that drains you?','Would you rather talk to animals or speak every human language?','Would you rather have an extra hour every day or an extra day every week?','Would you rather ride a rollercoaster blindfolded or bungee jump with your eyes open?','Would you rather never be cold again or never be hot again?','Would you rather your phone always be at 1% or always have a cracked screen?','Would you rather accidentally like a photo from three years ago or accidentally reply-all?','Would you rather be a secret superhero nobody knows about or a mediocre one everyone loves?','Would you rather have free Wi-Fi everywhere or free coffee everywhere?','Would you rather live without music or without colour?','Would you rather always cry at happy movies or always laugh at serious ones?','Would you rather have the world’s best hug or the world’s best high five?','Would you rather say everything you think for a day or not speak at all for a day?','Would you rather have hiccups for a week or an itch you can’t scratch for a day?','Would you rather write a hit song or a bestselling book?','Would you rather walk in on a surprise party for you or be the one planning it?','Would you rather your whole life be a musical or an action movie?','Would you rather have super strong legs or super strong arms?','Would you rather have a pause button for awkward silences or a mute button for annoying people?','Would you rather share your Spotify Wrapped or your screen time report?','Would you rather eat only pizza or only ice cream for the rest of your life?','Would you rather accidentally call your teacher “mum” or your boss “dad”?','Would you rather see 10 minutes into the future or 10 years into the future?','Would you rather have a mini-golf course in your backyard or a movie theatre in your basement?','Would you rather lose your voice for a week or your sense of direction forever?');
+emojiCards.push(['🦈🌊','Jaws'],['👻🚫','Ghostbusters'],['🧙‍♂️💍','The Lord of the Rings'],['⚡👓','Harry Potter'],['🚢🧊','Titanic'],['🦖🏝️','Jurassic Park'],['🤖🌱','WALL-E'],['🐀👨‍🍳','Ratatouille'],['🏠🎈','Up'],['🧸🤠','Toy Story'],['🦇🃏','The Dark Knight'],['🕶️💊','The Matrix'],['👽📞','E.T.'],['🚗⏰','Back to the Future'],['🦍🏙️','King Kong'],['🧞🪔','Aladdin'],['🧜‍♀️🐚','The Little Mermaid'],['🍎👸💤','Snow White'],['🐘🪶','Dumbo'],['🐢🍕','Ninja Turtles'],['🐦🐦🪨','Kill two birds with one stone'],['🐘🏠','Elephant in the room'],['🍰🥄','Piece of cake'],['🌧️🐱🐶','Raining cats and dogs'],['🧊💔','Break the ice'],['🙈🙉🙊','See no evil'],['🐴🌑','Dark horse'],['🍋🍋','When life gives you lemons'],['🕰️💰','Time is money'],['🐑⚫','Black sheep'],['📱🔋','Low battery'],['📶❌','No Wi-Fi'],['🚦🛑','Red light'],['🍝🇮🇹','Spaghetti'],['🏖️🧴','Sunscreen'],['⛈️☂️','Umbrella'],['🧦🌀','Missing sock'],['🔔🏫','School bell'],['🛒🚗','Shopping cart'],['🎄🦌','Reindeer'],['🎃👻','Halloween'],['🐰🥚','Easter bunny'],['🎅🛷','Santa’s sleigh'],['💍👰','Wedding'],['🎓🧢','Graduation'],['🌋🏝️','Volcano island'],['🗽🍎','New York'],['🗼🥐','Paris'],['🍣🇯🇵','Sushi'],['🌮🇲🇽','Tacos'],['🏔️⛷️','Skiing'],['🚀🌕','Moon landing'],['🕵️🔍','Detective'],['🧛🦇','Dracula'],['🧟🧠','Zombie'],['🐉🔥','Dragon'],['🏴‍☠️🦜','Pirate'],['🧙‍♀️🧹','Witch'],['🎮🕹️','Video game'],['📸🤳','Selfie'],['🍿🎬','Movie night'],['⚽🥅','Goal'],['🎂🕯️','Blow out the candles'],['🥚🍳','Scrambled eggs'],['🚿🎤','Singing in the shower'],['😴⏰','Alarm clock'],['🛌🐑','Counting sheep'],['🐔🛣️','Why did the chicken cross the road'],['🌈🦄','Rainbow unicorn'],['🔑🏠','House keys'],['🥶🥵','Hot and cold'],['🎸🔥','Guitar solo']);
 </script>
 </body>
 </html>
